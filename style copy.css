@@ -1,0 +1,18 @@
+.container {
+  -webkit-perspective: 800px; /* Safari üçün */
+  perspective: 800px;
+}
+
+.image3d {
+  -webkit-transform-style: preserve-3d; /* Safari üçün */
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+
+.container:hover .image3d {
+  -webkit-transform: rotateY(25deg) rotateX(15deg) scale(1.05);
+  transform: rotateY(25deg) rotateX(15deg) scale(1.05);
+}
+
+
+  

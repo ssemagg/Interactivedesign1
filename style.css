@@ -1,0 +1,151 @@
+
+
+
+/* =========================
+   FONT & BASE STYLE
+========================= */
+@font-face {
+    font-family: "Untitled Serif";
+    src: url("UntitledSerif-RegularItalic.woff2") format("woff2"),
+         url("UntitledSerif-RegularItalic.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.poem {
+    font-family: "Untitled Serif", serif;
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    margin: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+
+}
+
+body {
+    margin: 0px;
+}
+
+
+
+
+/* =========================
+   CENTER BOX FONT
+========================= */
+.poem.center {
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    max-width: 600px;
+    font-style: italic;
+    margin: 0 auto;
+
+    color: rgb(70, 69, 69); /* orta box rəngi qalsın */
+}
+
+/* =========================
+   LEFT & RIGHT BOX FONT COLOR
+========================= */
+.poem.left,
+.poem.right {
+    color: #aaa9a9; /* daha açıq gray */
+}
+
+
+
+/* =========================
+   GLOBAL SETTINGS
+========================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.flex-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+
+  background-color: #ffffff;
+}
+
+/* =========================
+   BASE BOX STYLE
+========================= */
+.poem {
+  background-color: #ffffff;
+  border: 1px solid transparent;
+  padding: 20px;
+  line-height: 1.6;
+
+  overflow-y: auto;   /* 🔴 HƏR 3 BOX SCROLL ALSIN */
+}
+
+/*  body {
+    scrollbar-width: thin;
+    scrollbar-color: #e0e0e0 transparent;
+} */
+/* =========================
+   LEFT BOX
+========================= */
+.left {
+  flex: 0.5;
+  text-align: left;
+}
+
+/* =========================
+   CENTER BOX
+========================= */
+.center {
+  flex: 1;
+  text-align: center;
+}
+
+/* =========================
+   RIGHT BOX
+========================= */
+.right {
+  flex: 0.5;
+  text-align: left;
+}
+
+
+                
+/*     --text-light: #6e6e6e;
+    --gray-lightest: rgb(241, 241, 241);
+    --gray-lighter: rgb(234, 234, 234);
+    --gray-light: rgb(166, 166, 166);
+    --gray: rgba(0, 0, 0, 0.4);
+    --opacity-light: 0.8;
+    --opacity-lighter
+0.6
+: 0.6;
+    --opacity-lightest: 0.2;
+    --font-serif: "Untitled Serif", serif;
+    --font-sans: "Untitled Serif", sans-serif;
+    --font-mono: "Untitled Serif", monospace;
+    --font-accent: "Untitled Serif"; */
+
+
+
+    .poem {
+  width: 320px; }
+
+.poem > div {
+  padding-bottom: 1px;     /* mətn–xətt arası */
+  margin-bottom: 6px;      /* item-lar arası məsafə */
+  border-bottom: 1px solid #ecebeb;
+}
