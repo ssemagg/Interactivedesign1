@@ -1,85 +1,323 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>1stwebcodeSama</title>
-  <link rel="stylesheet" type="text/css" href="./style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YALE Architectural Typography</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.min.js"></script>
+  <script>
+    let yaleFont;
+    let systems = [];
+    let letters = "YALE";
+    let depthVector;
+    let prismScale;
+
+    function preload() {
+      yaleFont = loadFont("fonts/Yale2024-Bold.otf");
+    }
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      pixelDensity(1);
+      strokeJoin(ROUND);
+      rebuildSystems();
+    }
+
+    function rebuildSystems() {
+      systems = [];
+      depthVector = createVector(width * 0.08, -height * 0.065);
+      prismScale = min(width, height);
+
+      const typeSize = min(width * 0.15, 230);
+      const spacing = typeSize * 0.67;
+      const startX = width * 0.5 - ((letters.length - 1) * spacing) * 0.5;
+      const baseline = height * 0.76;
+
+      for (let i = 0; i < letters.length; i++) {
+        const letter = letters[i];
+        const x = startX + i * spacing;
+        const y = baseline;
+        const points = yaleFont.textToPoints(letter, x, y, typeSize, {
+          sampleFactor: 0.19,
+          simplifyThreshold: 0
+        });
+
+        const bounds = yaleFont.textBounds(letter, x, y, typeSize);
+        const source = architecturalPoints(bounds, points.length);
+        systems.push({ letter, points, source, bounds, phase: i * 0.8 });
+      }
+    }
+
+    function draw() {
+      background(0);
+      drawMainPrism();
+
+      stroke(255, 235);
+      strokeWeight(1.45);
+      noFill();
+
+      const tBase = millis() * 0.00063;
+      for (const system of systems) {
+        const morph = smoothPulse(0.5 + 0.5 * sin(tBase * TWO_PI + system.phase));
+        drawMorphSystem(system, morph);
+      }
+
+      drawLabels();
+      drawNavigationHints();
+    }
+
+    function drawMorphSystem(system, t) {
+      const front = [];
+      const back = [];
+      const letterTilt = createVector(0, -prismScale * 0.0022);
+
+      for (let i = 0; i < system.points.length; i++) {
+        const src = system.source[i];
+        const dst = system.points[i];
+        const x = lerp(src.x, dst.x, t);
+        const y = lerp(src.y, dst.y, t);
+        const p = createVector(x, y).add(letterTilt);
+        const pBack = p5.Vector.add(p, depthVector);
+        front.push(p);
+        back.push(pBack);
+      }
+
+      beginShape();
+      for (const p of front) {
+        vertex(p.x, p.y);
+      }
+      endShape(CLOSE);
+
+      beginShape();
+      for (const p of back) {
+        vertex(p.x, p.y);
+      }
+      endShape(CLOSE);
+
+      for (let i = 0; i < front.length; i += 9) {
+        line(front[i].x, front[i].y, back[i].x, back[i].y);
+      }
+    }
+
+    function drawMainPrism() {
+      const cx = width * 0.5;
+      const topY = height * 0.17;
+      const baseY = height * 0.79;
+      const w = min(width * 0.33, 350);
+      const innerW = w * 0.64;
+      const drift = createVector(width * 0.13, -height * 0.09);
+
+      const f1 = createVector(cx - w * 0.5, topY);
+      const f2 = createVector(cx + w * 0.5, topY);
+      const f3 = createVector(cx + w * 0.5, baseY);
+      const f4 = createVector(cx - w * 0.5, baseY);
+
+      const b1 = p5.Vector.add(f1, drift);
+      const b2 = p5.Vector.add(f2, drift);
+      const b3 = p5.Vector.add(f3, drift);
+      const b4 = p5.Vector.add(f4, drift);
+
+      stroke(255, 245);
+      strokeWeight(1.8);
+      noFill();
+      drawQuad(f1, f2, f3, f4);
+      drawQuad(b1, b2, b3, b4);
+      connectCorners([f1, f2, f3, f4], [b1, b2, b3, b4]);
+
+      const insetYTop = topY + (baseY - topY) * 0.11;
+      const insetYBot = baseY - (baseY - topY) * 0.12;
+      drawInsetFrame(cx, insetYTop, innerW, drift);
+      drawInsetFrame(cx, insetYBot, innerW, drift);
+    }
+
+    function drawInsetFrame(cx, y, w, drift) {
+      const h = w * 0.42;
+      const f1 = createVector(cx - w * 0.5, y - h * 0.5);
+      const f2 = createVector(cx + w * 0.5, y - h * 0.5);
+      const f3 = createVector(cx + w * 0.5, y + h * 0.5);
+      const f4 = createVector(cx - w * 0.5, y + h * 0.5);
+      const b1 = p5.Vector.add(f1, drift);
+      const b2 = p5.Vector.add(f2, drift);
+      const b3 = p5.Vector.add(f3, drift);
+      const b4 = p5.Vector.add(f4, drift);
+
+      stroke(255, 220);
+      strokeWeight(1.6);
+      drawQuad(f1, f2, f3, f4);
+      drawQuad(b1, b2, b3, b4);
+      connectCorners([f1, f2, f3, f4], [b1, b2, b3, b4]);
+      line(f1.x, f1.y, f3.x, f3.y);
+      line(f2.x, f2.y, f4.x, f4.y);
+    }
+
+    function drawQuad(a, b, c, d) {
+      line(a.x, a.y, b.x, b.y);
+      line(b.x, b.y, c.x, c.y);
+      line(c.x, c.y, d.x, d.y);
+      line(d.x, d.y, a.x, a.y);
+    }
+
+    function connectCorners(frontCorners, backCorners) {
+      for (let i = 0; i < frontCorners.length; i++) {
+        line(
+          frontCorners[i].x, frontCorners[i].y,
+          backCorners[i].x, backCorners[i].y
+        );
+      }
+    }
+
+    function architecturalPoints(bounds, count) {
+      const pts = [];
+      const x = bounds.x;
+      const y = bounds.y;
+      const w = max(bounds.w, 12);
+      const h = max(bounds.h, 12);
+
+      const outerCount = floor(count * 0.42);
+      const innerCount = floor(count * 0.32);
+      const columnCount = floor(count * 0.18);
+      const diagCount = max(0, count - outerCount - innerCount - columnCount);
+
+      collectRectLoop(pts, x, y, w, h, outerCount);
+      collectRectLoop(pts, x + w * 0.15, y + h * 0.1, w * 0.7, h * 0.8, innerCount);
+      collectColumnLines(pts, x, y, w, h, columnCount);
+      collectDiagonals(pts, x, y, w, h, diagCount);
+
+      return resample(pts, count);
+    }
+
+    function collectRectLoop(store, x, y, w, h, count) {
+      if (count <= 0) return;
+      for (let i = 0; i < count; i++) {
+        const t = i / max(1, count - 1);
+        const perimeter = (2 * w + 2 * h) * t;
+        let px = x;
+        let py = y;
+        if (perimeter <= w) {
+          px = x + perimeter;
+          py = y;
+        } else if (perimeter <= w + h) {
+          px = x + w;
+          py = y + (perimeter - w);
+        } else if (perimeter <= w + h + w) {
+          px = x + w - (perimeter - (w + h));
+          py = y + h;
+        } else {
+          px = x;
+          py = y + h - (perimeter - (w + h + w));
+        }
+        store.push(createVector(px, py));
+      }
+    }
+
+    function collectColumnLines(store, x, y, w, h, count) {
+      if (count <= 0) return;
+      const columns = [0.2, 0.5, 0.8];
+      for (let i = 0; i < count; i++) {
+        const c = columns[i % columns.length];
+        const t = (i % (count / columns.length + 1)) / max(1, count / columns.length);
+        const px = x + w * c;
+        const py = lerp(y, y + h, t);
+        store.push(createVector(px, py));
+      }
+    }
+
+    function collectDiagonals(store, x, y, w, h, count) {
+      if (count <= 0) return;
+      for (let i = 0; i < count; i++) {
+        const t = i / max(1, count - 1);
+        if (i % 2 === 0) {
+          store.push(createVector(lerp(x, x + w, t), lerp(y, y + h, t)));
+        } else {
+          store.push(createVector(lerp(x + w, x, t), lerp(y, y + h, t)));
+        }
+      }
+    }
+
+    function resample(points, targetCount) {
+      if (points.length === targetCount) return points;
+      if (points.length === 0) {
+        const fallback = [];
+        for (let i = 0; i < targetCount; i++) {
+          fallback.push(createVector(width * 0.5, height * 0.5));
+        }
+        return fallback;
+      }
+
+      const out = [];
+      for (let i = 0; i < targetCount; i++) {
+        const idx = floor(map(i, 0, max(1, targetCount - 1), 0, points.length - 1));
+        out.push(points[idx].copy());
+      }
+      return out;
+    }
+
+    function smoothPulse(v) {
+      return v * v * (3 - 2 * v);
+    }
+
+    function drawLabels() {
+      const labelAlpha = 236;
+      const now = millis() * 0.001;
+      const driftY = sin(now * 0.6) * 2.5;
+
+      fill(255, labelAlpha);
+      noStroke();
+      textFont(yaleFont);
+      textAlign(LEFT, CENTER);
+
+      textSize(min(width * 0.037, 56));
+      text("MIT", width * 0.36, height * 0.14 + driftY * 0.4);
+      textSize(min(width * 0.053, 74));
+      text("Media Lab", width * 0.61, height * 0.28 + driftY * 0.5);
+      textSize(min(width * 0.04, 58));
+      text("10.13.2023", width * 0.41, height * 0.2 + driftY * 0.35);
+
+      textSize(min(width * 0.055, 72));
+      text("Typography", width * 0.42, height * 0.77 + driftY);
+      text("Computational", width * 0.39, height * 0.79 + driftY);
+      text("D/A Studio", width * 0.63, height * 0.87 + driftY * 0.65);
+    }
+
+    function drawNavigationHints() {
+      const r = min(width, height) * 0.018;
+      const y = height * 0.515;
+      stroke(255, 200);
+      strokeWeight(1.2);
+      fill(255, 205);
+      circle(width * 0.018, y, r * 2);
+      circle(width * 0.982, y, r * 2);
+
+      noStroke();
+      fill(0, 220);
+      textFont("sans-serif");
+      textSize(r * 1.3);
+      textAlign(CENTER, CENTER);
+      text("<", width * 0.018, y + 1);
+      text(">", width * 0.982, y + 1);
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      rebuildSystems();
+    }
+  </script>
 </body>
 </html>
-  <div class="flex-container">
-
-
-    <!-- LEFT BOX -->
-    <div class="poem left">
-  <div class="poem-item1">Taking Up Slack <br> <i>About silence and what remains.</i> </div>
-  <div class="poem-item2">Among Them All <br> <i>On where attention slips.</i>  </div>
-  <div class="poem-item3">The Privacy of Doing <br> <i>Distance mistaken for clarity, <br> almost deliberately.</i> </div>
-<div class="poem-item1">The Moon <br> <i>A Language pausing mid-thought.</i> </div>
-  <div class="poem-item2">Home Life <br> <i>Presence, slightly misaligned with itself.</i>  </div>
-  <div class="poem-item3">Bordering on Skill. </div>
-<div class="poem-item1">Crown <br> <i>Attention.</i> </div>
-  <div class="poem-item2">Registration <br> <i>Repetition.</i>  </div>
-  <div class="poem-item3">Historic Site <br> <i>Language pauses mid-thought. </i> </div>
-<div class="poem-item1">Objects Which are Final <br> <i>A Language pausing mid-thought.</i> </div>
-  <div class="poem-item2">Songwriting <br> <i>The surface does all the work, <br> leaving traces behind.</i>  </div>
-  <div class="poem-item3">Jane Austen <br> <i>On the moment of Emma's death.</i> </div> 
- <div class="poem-item2">Fugio <br> <i>Presence slightly misaligned with <br>expectation and memory.</i>  </div>
-<div class="poem-item3">Sleeples Before Sleep <br> <i>Morning.</i> </div> 
- <div class="poem-item2">Foyer <br> <i>Paper folded too many times.</i>  </div>
-
-</div>
-
-    
-
-    <!-- CENTER BOX -->
-    <div class="poem center" id="centerpiece">
-      <div class="poem center">
-
-"The test of nature is its ability to remain," as when we are brought to our senses by heaped fruit and vegetables, our eyes breaking on the jetties of oranges.
-And then I was starting to propose something about Nana, or perhaps I was anticipating another separation, your crossing, leaving to look into a store window.
-But there is always more of it going on. always more experience towing us forward, leaving that part to be worked out inwardly as we look into a store window.
-I should have more properly referred to the moment of Emma's death. Without rapport even then, the death deaf to opportunity or calling, listlessly wandering off.
-Cowardice? I think that that scene prefigured indifference elsewhere. The moment as it is is too lofty. Everyone is here and yet not here, their faces have departed for who knows where—
-blank as the street, the long span
-of the table. Taking up where they leave off, may one say then
-disregard is used to crop relationship?
-The heart pours itself into order and attaches to objects. The senses are borne with great clarity in bins picked from the orchards.
-"The test of nature is its ability to remain," in the sense that nature has to remind of its use,
-"the taut cord and the elasticity of wood,"
-so that we implement these leading materials.
-But it is an evident strain to bring something into existence.
-I was never so aware of the form of taking a walk as when it was a dexterity disowned by you.
-Perhaps you understood my remarks as an inducement "to have an experience," an invented intimacy culture often tries for, and so you pretended to be inept-which in its extreme is also a form and a diversion. Yet I believe you, this unstringing of yours,
-instinctively protecting yourself from my reach.
-</div>
-
-
-    </div>
-
-    <!-- RIGHT BOX -->
-    <div class="poem right">
-      <div class="poem-item1">Taking Up Slack <br> <i>About silence and what remains.</i> </div>
-  <div class="poem-item2">Among Them All <br> <i>On where attention slips.</i>  </div>
-  <div class="poem-item3">The Privacy of Doing <br> <i>Distance mistaken for clarity, <br> almost deliberately.</i> </div>
-<div class="poem-item1">The Moon <br> <i>A Language pausing mid-thought.</i> </div>
-  <div class="poem-item2">Home Life <br> <i>Presence, slightly misaligned with itself.</i>  </div>
-  <div class="poem-item3">Bordering on Skill. </div>
-<div class="poem-item1">Crown <br> <i>Attention.</i> </div>
-  <div class="poem-item2">Registration <br> <i>Repetition.</i>  </div>
-  <div class="poem-item3">Historic Site <br> <i>Language pauses mid-thought. </i> </div>
-<div class="poem-item1">Objects Which are Final <br> <i>A Language pausing mid-thought.</i> </div>
-  <div class="poem-item2">Songwriting <br> <i>The surface does all the work, <br> leaving traces behind.</i>  </div>
-  <div class="poem-item3">Jane Austen <br> <i>On the moment of Emma's death.</i> </div> 
- <div class="poem-item2">Fugio <br> <i>Presence slightly misaligned with <br>expectation and memory.</i>  </div>
-<div class="poem-item3">Sleeples Before Sleep <br> <i>Morning.</i> </div> 
- <div class="poem-item2">Foyer <br> <i>Paper folded too many times.</i>  </div>
-    </div>
-
-  </div>
-
-</body>
-</html>
-
-
-  
